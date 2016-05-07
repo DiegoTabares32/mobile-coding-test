@@ -22,4 +22,8 @@ public class WeaponsLocation {
     public String getCode() {
         return code;
     }
+
+    public int getRadiusInMeter() {
+        return radiusInMeter;
+    }
 }
