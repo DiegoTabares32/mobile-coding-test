@@ -1,6 +1,7 @@
 package com.example.mobilecodingtest.Service;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -48,11 +49,17 @@ public class ServiceManager {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+
+                        Log.v("Mensaje", "RetrieveLocations onResponse = " + response);
+
                         locationsListener.onResponse(new LocationsParser().parse(response));
                     }
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+
+                Log.v("Mensaje", "RetrieveLocations onError = " + error);
+
                 locationsListener.onError(error.getMessage());
             }
         });
