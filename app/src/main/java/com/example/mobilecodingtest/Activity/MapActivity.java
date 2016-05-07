@@ -1,23 +1,126 @@
 package com.example.mobilecodingtest.Activity;
 
+import android.app.Dialog;
+import android.graphics.PorterDuff;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import com.example.mobilecodingtest.Interface.LocationsListener;
+import com.example.mobilecodingtest.Model.Location;
+import com.example.mobilecodingtest.Model.WeaponsLocation;
 import com.example.mobilecodingtest.R;
+import com.example.mobilecodingtest.Service.ServiceManager;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.List;
 
 public class MapActivity extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private Dialog dialog;
+    private Button retryButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        //if error retrieving locations, retry button to gather them again
+        setRetryButton();
+
+        showLoadingDialog();
+
         setUpMapIfNeeded();
+
+        lookForWeaponsLocations();
+    }
+
+    private void lookForWeaponsLocations(){
+
+        ServiceManager.getINSTANCE().retrieveWeaponsLocations(this, new LocationsListener() {
+            @Override
+            public void onError(String error) {
+                cancelDialog();
+
+                retryButton.setVisibility(View.VISIBLE);
+
+
+                Toast.makeText(MapActivity.this, "Ocurrió un error buscando las coordenadas. Intenta nuevamente", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(List<WeaponsLocation> response) {
+                drawLocationsOnMap(response);
+
+                cancelDialog();
+
+            }
+        });
+    }
+
+    public void showLoadingDialog(){
+        if (dialog == null) {
+            dialog = new Dialog(this, R.style.Theme_Transparent);
+            dialog.setCancelable(false);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.loading_dialog);
+            ((ProgressBar) dialog.findViewById(R.id.dialog_progress)).getIndeterminateDrawable().setColorFilter(getResources().getColor(R.color.app_color), PorterDuff.Mode.MULTIPLY);
+        }
+        dialog.show();
+    }
+
+    public void cancelDialog(){
+        dialog.dismiss();
+    }
+
+    /**
+     * Clear map and add markers for all locations
+     * @param locations
+     */
+    private void drawLocationsOnMap(List<WeaponsLocation> locations){
+        mMap.clear();
+
+        //this is to calculate the best camera zoom in order to see all markers at a time
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        for (WeaponsLocation location : locations) {
+            Location loc = location.getLocation();
+            Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title(location.getCode()));
+
+            builder.include(marker.getPosition());
+        }
+        LatLngBounds bounds = builder.build();
+
+        int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()); // offset from edges of the map in pixels
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+        mMap.animateCamera(cu);
+    }
+
+    private void setRetryButton(){
+        retryButton = (Button) findViewById(R.id.retryButton);
+        retryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                retryButton.setVisibility(View.GONE);
+
+                showLoadingDialog();
+                lookForWeaponsLocations();
+            }
+        });
     }
 
     @Override
@@ -47,10 +150,6 @@ public class MapActivity extends FragmentActivity {
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
                     .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
         }
     }
 
