@@ -1,7 +1,6 @@
 package com.example.mobilecodingtest.Service;
 
 import android.content.Context;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -10,9 +9,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.mobilecodingtest.Interface.LocationsListener;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.example.mobilecodingtest.Model.WeaponsLocation;
+import com.example.mobilecodingtest.Parser.LocationsParser;
+import com.google.gson.Gson;
 
 /**
  * Created by Diego on 07/05/2016.
@@ -34,6 +33,11 @@ public class ServiceManager {
         return INSTANCE;
     }
 
+    /**
+     * Makes http connection with Volley to retrieve locations json
+     * @param context
+     * @param locationsListener
+     */
     public void retrieveWeaponsLocations(final Context context, final LocationsListener locationsListener){
         // Instantiate the RequestQueue.
         RequestQueue queue = Volley.newRequestQueue(context);
@@ -44,7 +48,7 @@ public class ServiceManager {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                         locationsListener.onResponse(response);
+                        locationsListener.onResponse(new LocationsParser().parse(response));
                     }
                 }, new Response.ErrorListener() {
             @Override
