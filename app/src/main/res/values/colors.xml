@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="white">#ffffff</color>
-    <color name="splash_color">#009688</color>
+    <color name="app_color">#009688</color>
+    <color name="app_color_pressed">#ff71c1cc</color>
 </resources>
