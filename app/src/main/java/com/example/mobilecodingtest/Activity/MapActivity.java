@@ -1,8 +1,9 @@
-package com.example.mobilecodingtest;
+package com.example.mobilecodingtest.Activity;
 
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 
+import com.example.mobilecodingtest.R;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
