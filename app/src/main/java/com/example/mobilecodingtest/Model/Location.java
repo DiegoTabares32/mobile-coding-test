@@ -13,4 +13,11 @@ public class Location {
         super();
     }
 
+    public float getLatitude() {
+        return latitude;
+    }
+
+    public float getLongitude() {
+        return longitude;
+    }
 }

@@ -15,4 +15,11 @@ public class WeaponsLocation {
         super();
     }
 
+    public Location getLocation() {
+        return location;
+    }
+
+    public String getCode() {
+        return code;
+    }
 }
