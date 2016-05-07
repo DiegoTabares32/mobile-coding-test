@@ -1,8 +1,12 @@
 package com.example.mobilecodingtest.Activity;
 
 import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.location.LocationManager;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -12,6 +16,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.mobilecodingtest.IntentReceiver.ProximityIntentReceiver;
 import com.example.mobilecodingtest.Interface.LocationsListener;
 import com.example.mobilecodingtest.Model.Location;
 import com.example.mobilecodingtest.Model.WeaponsLocation;
@@ -31,14 +36,19 @@ import java.util.List;
 
 public class MapActivity extends FragmentActivity {
 
+    private static final long EXPIRATION = -1; //-1 indicates it no expires
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Dialog dialog;
     private Button retryButton;
+    private static final String PROX_ALERT_INTENT = MapActivity.class.getName();
+    private LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        setLocationManager();
 
         //if error retrieving locations, retry button to gather them again
         setRetryButton();
@@ -65,6 +75,21 @@ public class MapActivity extends FragmentActivity {
 
             @Override
             public void onResponse(List<WeaponsLocation> response) {
+
+                //todo para probar
+                WeaponsLocation weaponsLocation = new WeaponsLocation();
+
+                Location location = new Location();
+                location.setLongitude(-58.412261);
+                location.setLatitude(-34.623976);
+
+                weaponsLocation.setLocation(location);
+                weaponsLocation.setCode("Casa");
+                weaponsLocation.setRadiusInMeter(110);
+
+                response.add(weaponsLocation);
+                //todo hasta aca
+
                 drawLocationsOnMap(response);
 
                 cancelDialog();
@@ -110,6 +135,8 @@ public class MapActivity extends FragmentActivity {
         //this is to calculate the best camera zoom in order to see all markers at a time
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
+        int requestCode = 1; // for alert proximity
+
         for (WeaponsLocation location : locations) {
             Location loc = location.getLocation();
 
@@ -119,9 +146,14 @@ public class MapActivity extends FragmentActivity {
             // Get back the mutable Circle
             mMap.addCircle(circleOptions);
 
+            //todo alert
+            addProximityAlert(loc.getLatitude(), loc.getLongitude(), location.getRadiusInMeter(), requestCode);
+
             Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title(location.getCode()));
 
             builder.include(marker.getPosition());
+
+            requestCode++;
         }
         LatLngBounds bounds = builder.build();
 
@@ -142,6 +174,26 @@ public class MapActivity extends FragmentActivity {
                 lookForWeaponsLocations();
             }
         });
+    }
+
+    //and then add a proximity alert to it calling the following method:
+    // Proximity alert
+    private void addProximityAlert(double lat, double lng, int radius, int id){
+        Intent intent = new Intent(PROX_ALERT_INTENT);
+        PendingIntent proximityIntent = PendingIntent.getBroadcast(this, id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+        locationManager.addProximityAlert(lat, lng, radius, EXPIRATION, proximityIntent);
+
+    IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+    registerReceiver(new ProximityIntentReceiver(), filter);
+
+    }
+
+//    Then you need to add a proximity alert listener to the map:
+//    IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+//    registerReceiver(new ProximityIntentReceiver(), filter);
+
+    private void setLocationManager(){
+        locationManager =  (LocationManager) getSystemService(LOCATION_SERVICE);
     }
 
     @Override
@@ -171,6 +223,8 @@ public class MapActivity extends FragmentActivity {
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
                     .getMap();
+
+            mMap.setMyLocationEnabled(true);
         }
     }
 

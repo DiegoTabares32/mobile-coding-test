@@ -26,4 +26,16 @@ public class WeaponsLocation {
     public int getRadiusInMeter() {
         return radiusInMeter;
     }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+
+    public void setRadiusInMeter(int radiusInMeter) {
+        this.radiusInMeter = radiusInMeter;
+    }
 }
