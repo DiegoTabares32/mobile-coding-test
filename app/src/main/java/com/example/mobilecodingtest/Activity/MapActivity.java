@@ -40,8 +40,9 @@ public class MapActivity extends FragmentActivity {
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private Dialog dialog;
     private Button retryButton;
-    private static final String PROX_ALERT_INTENT = MapActivity.class.getName();
+    private static final String PROX_ALERT_INTENT = "ALERT_INTENT";
     private LocationManager locationManager;
+    private static Boolean receiverRegistered = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +77,7 @@ public class MapActivity extends FragmentActivity {
             @Override
             public void onResponse(List<WeaponsLocation> response) {
 
+//                response.clear();
                 //todo para probar
                 WeaponsLocation weaponsLocation = new WeaponsLocation();
 
@@ -146,8 +148,8 @@ public class MapActivity extends FragmentActivity {
             // Get back the mutable Circle
             mMap.addCircle(circleOptions);
 
-            //todo alert
-            addProximityAlert(loc.getLatitude(), loc.getLongitude(), location.getRadiusInMeter(), requestCode);
+            addProximityAlert(loc.getLatitude(), loc.getLongitude(), location.getRadiusInMeter(), requestCode, location.getCode());
+            registerProximityReceiver();
 
             Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title(location.getCode()));
 
@@ -155,6 +157,8 @@ public class MapActivity extends FragmentActivity {
 
             requestCode++;
         }
+
+
         LatLngBounds bounds = builder.build();
 
         int padding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics()); // offset from edges of the map in pixels
@@ -162,6 +166,15 @@ public class MapActivity extends FragmentActivity {
 
         mMap.animateCamera(cu);
     }
+
+    private void registerProximityReceiver(){
+        if(!receiverRegistered) {
+            IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+            registerReceiver(new ProximityIntentReceiver(), filter);
+            receiverRegistered = true;
+        }
+    }
+
 
     private void setRetryButton(){
         retryButton = (Button) findViewById(R.id.retryButton);
@@ -178,13 +191,14 @@ public class MapActivity extends FragmentActivity {
 
     //and then add a proximity alert to it calling the following method:
     // Proximity alert
-    private void addProximityAlert(double lat, double lng, int radius, int id){
+    private void addProximityAlert(double lat, double lng, int radius, int id, String locationName){
         Intent intent = new Intent(PROX_ALERT_INTENT);
-        PendingIntent proximityIntent = PendingIntent.getBroadcast(this, id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("location", locationName);
+        PendingIntent proximityIntent = PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         locationManager.addProximityAlert(lat, lng, radius, EXPIRATION, proximityIntent);
 
-    IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-    registerReceiver(new ProximityIntentReceiver(), filter);
+//        IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
+//        registerReceiver(new ProximityIntentReceiver(), filter);
 
     }
 
