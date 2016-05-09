@@ -78,19 +78,50 @@ public class MapActivity extends FragmentActivity {
             @Override
             public void onResponse(List<WeaponsLocation> response) {
 
-//                response.clear();
+                response.clear();
                 //todo para probar
                 WeaponsLocation weaponsLocation = new WeaponsLocation();
 
                 Location location = new Location();
-                location.setLongitude(-58.412261);
-                location.setLatitude(-34.623976);
+//casa                location.setLongitude(-58.412261);
+//                location.setLatitude(-34.623976);
+
+                location.setLongitude(-58.438159);// vege
+                location.setLatitude(-34.597962);
 
                 weaponsLocation.setLocation(location);
-                weaponsLocation.setCode("Casa");
-                weaponsLocation.setRadiusInMeter(110);
+                weaponsLocation.setCode("Vege");
+                weaponsLocation.setRadiusInMeter(60);
 
                 response.add(weaponsLocation);
+
+
+                weaponsLocation = new WeaponsLocation();
+
+                location = new Location();
+
+                location.setLongitude(-58.438342);// kiosco scalabrini
+                location.setLatitude(-34.599556);
+
+                weaponsLocation.setLocation(location);
+                weaponsLocation.setCode("Kiosco");
+                weaponsLocation.setRadiusInMeter(40);
+
+                response.add(weaponsLocation);
+
+                weaponsLocation = new WeaponsLocation();
+
+                location = new Location();
+
+                location.setLongitude(-58.437623);// esquina offi
+                location.setLatitude(-34.599071);
+
+                weaponsLocation.setLocation(location);
+                weaponsLocation.setCode("Esquina");
+                weaponsLocation.setRadiusInMeter(10);
+
+                response.add(weaponsLocation);
+
                 //todo hasta aca
 
                 drawLocationsOnMap(response);
