@@ -66,7 +66,7 @@ public class ProximityIntentReceiver extends BroadcastReceiver {
                 .setContentText(enteringMessage)
                 .setContentTitle("ALERTA!")
                 .setWhen(System.currentTimeMillis())
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.app_logo)
                 .setAutoCancel(true)
                 .setTicker(context.getString(R.string.app_name))
                 .setContentIntent(pendingIntent)
