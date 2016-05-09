@@ -190,7 +190,7 @@ public class SplashActivity extends Activity implements ActivityCompat.OnRequest
                     Toast.makeText(this, "Debes aceptar estos permisos para poder usar la app", Toast.LENGTH_LONG).show();
 
                     //vuelve a pedir los permisos
-                    Log.v("Mensaje", "Hay permisos no aceptado");
+                    Log.v("Mensaje", "Hay permisos no aceptados");
 
                     requestRequiredPermissions();
                 }

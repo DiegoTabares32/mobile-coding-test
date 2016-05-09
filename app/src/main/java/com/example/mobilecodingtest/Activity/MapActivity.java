@@ -1,14 +1,19 @@
 package com.example.mobilecodingtest.Activity;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -25,6 +30,7 @@ import com.example.mobilecodingtest.Service.ServiceManager;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -34,7 +40,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 
-public class MapActivity extends FragmentActivity {
+public class MapActivity extends Activity {
 
     private static final long EXPIRATION = -1; //-1 indicates it no expires
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
@@ -62,7 +68,7 @@ public class MapActivity extends FragmentActivity {
         lookForWeaponsLocations();
     }
 
-    private void lookForWeaponsLocations(){
+    private void lookForWeaponsLocations() {
 
         ServiceManager.getINSTANCE().retrieveWeaponsLocations(this, new LocationsListener() {
             @Override
@@ -78,52 +84,6 @@ public class MapActivity extends FragmentActivity {
             @Override
             public void onResponse(List<WeaponsLocation> response) {
 
-                response.clear();
-                //todo para probar
-                WeaponsLocation weaponsLocation = new WeaponsLocation();
-
-                Location location = new Location();
-//casa                location.setLongitude(-58.412261);
-//                location.setLatitude(-34.623976);
-
-                location.setLongitude(-58.438159);// vege
-                location.setLatitude(-34.597962);
-
-                weaponsLocation.setLocation(location);
-                weaponsLocation.setCode("Vege");
-                weaponsLocation.setRadiusInMeter(60);
-
-                response.add(weaponsLocation);
-
-
-                weaponsLocation = new WeaponsLocation();
-
-                location = new Location();
-
-                location.setLongitude(-58.438342);// kiosco scalabrini
-                location.setLatitude(-34.599556);
-
-                weaponsLocation.setLocation(location);
-                weaponsLocation.setCode("Kiosco");
-                weaponsLocation.setRadiusInMeter(40);
-
-                response.add(weaponsLocation);
-
-                weaponsLocation = new WeaponsLocation();
-
-                location = new Location();
-
-                location.setLongitude(-58.437623);// esquina offi
-                location.setLatitude(-34.599071);
-
-                weaponsLocation.setLocation(location);
-                weaponsLocation.setCode("Esquina");
-                weaponsLocation.setRadiusInMeter(10);
-
-                response.add(weaponsLocation);
-
-                //todo hasta aca
-
                 drawLocationsOnMap(response);
 
                 cancelDialog();
@@ -132,7 +92,7 @@ public class MapActivity extends FragmentActivity {
         });
     }
 
-    public void showLoadingDialog(){
+    public void showLoadingDialog() {
         if (dialog == null) {
             dialog = new Dialog(this, R.style.Theme_Transparent);
             dialog.setCancelable(false);
@@ -143,12 +103,12 @@ public class MapActivity extends FragmentActivity {
         dialog.show();
     }
 
-    public void cancelDialog(){
+    public void cancelDialog() {
         dialog.dismiss();
     }
 
 
-    private CircleOptions getCircle(Location location, int radius){
+    private CircleOptions getCircle(Location location, int radius) {
         // Instantiates a new CircleOptions object and defines the center and radius
         CircleOptions circleOptions = new CircleOptions()
                 .center(new LatLng(location.getLatitude(), location.getLongitude()))
@@ -163,7 +123,7 @@ public class MapActivity extends FragmentActivity {
      * Clear map and add markers for all locations
      * @param locations
      */
-    private void drawLocationsOnMap(List<WeaponsLocation> locations){
+    private void drawLocationsOnMap(List<WeaponsLocation> locations) {
         mMap.clear();
 
         //this is to calculate the best camera zoom in order to see all markers at a time
@@ -181,14 +141,16 @@ public class MapActivity extends FragmentActivity {
             mMap.addCircle(circleOptions);
 
             addProximityAlert(loc.getLatitude(), loc.getLongitude(), location.getRadiusInMeter(), requestCode, location.getCode());
-            registerProximityReceiver();
 
-            Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title(location.getCode()));
+            Marker marker = mMap.addMarker(new MarkerOptions().position(new LatLng(loc.getLatitude(), loc.getLongitude())).title(location.getCode()).snippet("Radio de alcance = " + location.getRadiusInMeter() + " metros"));
 
             builder.include(marker.getPosition());
 
             requestCode++;
         }
+
+        registerProximityReceiver();
+
 
 
         LatLngBounds bounds = builder.build();
@@ -199,8 +161,8 @@ public class MapActivity extends FragmentActivity {
         mMap.animateCamera(cu);
     }
 
-    private void registerProximityReceiver(){
-        if(!receiverRegistered) {
+    private void registerProximityReceiver() {
+        if (!receiverRegistered) {
             IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
             proximityReceiver = new ProximityIntentReceiver();
             registerReceiver(proximityReceiver, filter);
@@ -209,7 +171,7 @@ public class MapActivity extends FragmentActivity {
     }
 
 
-    private void setRetryButton(){
+    private void setRetryButton() {
         retryButton = (Button) findViewById(R.id.retryButton);
         retryButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -222,22 +184,27 @@ public class MapActivity extends FragmentActivity {
         });
     }
 
-    //and then add a proximity alert to it calling the following method:
-    // Proximity alert
-    private void addProximityAlert(double lat, double lng, int radius, int id, String locationName){
+    /**
+     * Add the proximity alert to indicated params.
+     * @param lat
+     * @param lng
+     * @param radius
+     * @param id
+     * @param locationName The name of the location. It will be displayed on the notification
+     */
+    private void addProximityAlert(double lat, double lng, int radius, int id, String locationName) {
         Intent intent = new Intent(PROX_ALERT_INTENT);
         intent.putExtra("location", locationName);
         PendingIntent proximityIntent = PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        locationManager.addProximityAlert(lat, lng, radius, EXPIRATION, proximityIntent);
 
-//        IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-//        registerReceiver(new ProximityIntentReceiver(), filter);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.addProximityAlert(lat, lng, radius, EXPIRATION, proximityIntent);
+        }else {
+            Toast.makeText(this, "Debes encender la ubicación de tu dispositivo para usar la app", Toast.LENGTH_LONG).show();
+        }
+
 
     }
-
-//    Then you need to add a proximity alert listener to the map:
-//    IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-//    registerReceiver(new ProximityIntentReceiver(), filter);
 
     private void setLocationManager(){
         locationManager =  (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -251,10 +218,9 @@ public class MapActivity extends FragmentActivity {
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
+     * installed) and the map has not already been instantiated..
      * <p/>
-     * If it isn't installed {@link SupportMapFragment} (and
+     * If it isn't installed {@link MapFragment} (and
      * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
      * install/update the Google Play services APK on their device.
      * <p/>
@@ -267,28 +233,23 @@ public class MapActivity extends FragmentActivity {
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
+            // Try to obtain the map from the MapFragment.
+            mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.map))
                     .getMap();
 
             mMap.setMyLocationEnabled(true);
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
-    private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
+        if(mMap != null){
+            mMap.clear();
+        }
+
+        //unregister the proximity alert
         if(proximityReceiver != null){
             unregisterReceiver(proximityReceiver);
         }
