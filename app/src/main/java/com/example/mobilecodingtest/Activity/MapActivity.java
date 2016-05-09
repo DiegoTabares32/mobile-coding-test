@@ -43,6 +43,7 @@ public class MapActivity extends FragmentActivity {
     private static final String PROX_ALERT_INTENT = "ALERT_INTENT";
     private LocationManager locationManager;
     private static Boolean receiverRegistered = false;
+    private ProximityIntentReceiver proximityReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,7 +171,8 @@ public class MapActivity extends FragmentActivity {
     private void registerProximityReceiver(){
         if(!receiverRegistered) {
             IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-            registerReceiver(new ProximityIntentReceiver(), filter);
+            proximityReceiver = new ProximityIntentReceiver();
+            registerReceiver(proximityReceiver, filter);
             receiverRegistered = true;
         }
     }
@@ -250,5 +252,14 @@ public class MapActivity extends FragmentActivity {
      */
     private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if(proximityReceiver != null){
+            unregisterReceiver(proximityReceiver);
+        }
     }
 }
