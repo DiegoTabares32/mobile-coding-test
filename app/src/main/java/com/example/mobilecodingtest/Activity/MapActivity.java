@@ -43,6 +43,7 @@ public class MapActivity extends FragmentActivity {
     private static final String PROX_ALERT_INTENT = "ALERT_INTENT";
     private LocationManager locationManager;
     private static Boolean receiverRegistered = false;
+    private ProximityIntentReceiver proximityReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,19 +78,50 @@ public class MapActivity extends FragmentActivity {
             @Override
             public void onResponse(List<WeaponsLocation> response) {
 
-//                response.clear();
+                response.clear();
                 //todo para probar
                 WeaponsLocation weaponsLocation = new WeaponsLocation();
 
                 Location location = new Location();
-                location.setLongitude(-58.412261);
-                location.setLatitude(-34.623976);
+//casa                location.setLongitude(-58.412261);
+//                location.setLatitude(-34.623976);
+
+                location.setLongitude(-58.438159);// vege
+                location.setLatitude(-34.597962);
 
                 weaponsLocation.setLocation(location);
-                weaponsLocation.setCode("Casa");
-                weaponsLocation.setRadiusInMeter(110);
+                weaponsLocation.setCode("Vege");
+                weaponsLocation.setRadiusInMeter(60);
 
                 response.add(weaponsLocation);
+
+
+                weaponsLocation = new WeaponsLocation();
+
+                location = new Location();
+
+                location.setLongitude(-58.438342);// kiosco scalabrini
+                location.setLatitude(-34.599556);
+
+                weaponsLocation.setLocation(location);
+                weaponsLocation.setCode("Kiosco");
+                weaponsLocation.setRadiusInMeter(40);
+
+                response.add(weaponsLocation);
+
+                weaponsLocation = new WeaponsLocation();
+
+                location = new Location();
+
+                location.setLongitude(-58.437623);// esquina offi
+                location.setLatitude(-34.599071);
+
+                weaponsLocation.setLocation(location);
+                weaponsLocation.setCode("Esquina");
+                weaponsLocation.setRadiusInMeter(10);
+
+                response.add(weaponsLocation);
+
                 //todo hasta aca
 
                 drawLocationsOnMap(response);
@@ -170,7 +202,8 @@ public class MapActivity extends FragmentActivity {
     private void registerProximityReceiver(){
         if(!receiverRegistered) {
             IntentFilter filter = new IntentFilter(PROX_ALERT_INTENT);
-            registerReceiver(new ProximityIntentReceiver(), filter);
+            proximityReceiver = new ProximityIntentReceiver();
+            registerReceiver(proximityReceiver, filter);
             receiverRegistered = true;
         }
     }
@@ -250,5 +283,14 @@ public class MapActivity extends FragmentActivity {
      */
     private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if(proximityReceiver != null){
+            unregisterReceiver(proximityReceiver);
+        }
     }
 }
